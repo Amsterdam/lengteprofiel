@@ -95,8 +95,7 @@ class GeotechnischLengteProfiel():
             bore.projectedLocation = self.line.project(boreLocation, normalized=True)
 
     def set_groundlevel(self):
-        # TODO: dit is niet zo mooi
-
+        # TODO: dit is niet zo mooi, twee keer hetzelfde
         for bore in self.bores:
             self.groundlevelRel.append([bore.projectedLocation, bore.groundlevel])
             self.groundlevelAbs.append([bore.projectedLocation * self.line.length, bore.groundlevel])
@@ -116,7 +115,7 @@ class GeotechnischLengteProfiel():
 
 
 
-    def plot(self, boundaries):
+    def plot(self, boundaries): #TODO: pas op bij opschonen, de boundaries veranderen nog weleens
         fig, ax1 = plt.subplots(figsize=(30, 7))
 
         # plot de cpts

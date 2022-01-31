@@ -38,6 +38,5 @@ gtl.xScaleCPT = 5 # horizontale schaal voor lijnen van cpt op canvas
 
 gtl.create_canvas_with_cpts()
 
-#TODO: ruim de classes op, daarin zit nog heel veel dat zou moeten met self.
 # TODO: voeg meer toe aan self?
 # TODO: maak dat je ook zonder boundaries kan plotten, dus alleen het ruwe grondonderzoek
