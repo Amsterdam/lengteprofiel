@@ -24,10 +24,6 @@ Afhankelijkheden
 """
 
 
-# TODO: ordenen, methods onderbrengen in classes
-# TODO: kan het ook runnen zonder eerst een canvas, maar direct een plaatje
-
-
 import numpy as np
 import pandas as pd
 import sys
@@ -115,8 +111,8 @@ class GeotechnischLengteProfiel():
 
 
 
-    def plot(self, boundaries): #TODO: pas op bij opschonen, de boundaries veranderen nog weleens
-        fig, ax1 = plt.subplots(figsize=(30, 7))
+    def plot(self, boundaries, filename): #TODO: pas op bij opschonen, de boundaries veranderen nog weleens
+        fig, ax1 = plt.subplots(figsize=(self.line.length / 5, 7))
 
         # plot de cpts
         for cpt in self.cpts:
@@ -168,8 +164,8 @@ class GeotechnischLengteProfiel():
         ax1.set_xlabel("afstand [m]")
         ax1.set_ylabel("niveau [m t.o.v. NAP]")
 
-        plt.savefig("./gtl.svg", bbox_inches="tight")
-        plt.savefig("./gtl.png", bbox_inches="tight")   
+        plt.savefig(f"./gtl_{filename}.svg", bbox_inches="tight")
+        plt.savefig(f"./gtl_{filename}.png", bbox_inches="tight")   
 
     def add_line(self, eventorigin):
         # deze functie maakt het mogelijk om een lijn (grens) toe te voegen 
@@ -372,6 +368,7 @@ class GeotechnischLengteProfiel():
 
         # voeg de cpts toe aan het canvas
         for i, cpt in enumerate(self.cpts):
+
             qcX, rfX, y = self.scale_cpt_to_canvas(cpt, self.xScaleCPT, yscale, cpt.groundlevel, top, self.canvasWidth)
             # tkinter moet een lijst van x,y punten hebben
             qcPoints = list(zip(qcX, y))
