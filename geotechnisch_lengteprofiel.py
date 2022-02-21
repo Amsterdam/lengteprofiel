@@ -59,6 +59,9 @@ class Boreverzameling():
             if f.lower().endswith("xml"):
                 bore.load_xml(f)
                 self.bores.append(bore)
+            elif f.lower().endswith("gef"):
+                bore.load_gef(f)
+                self.bores.append(bore)
 
 class GeotechnischLengteProfiel():
     def __init__(self):
@@ -127,10 +130,13 @@ class GeotechnischLengteProfiel():
             plt.grid(b=True, which="minor", lw=0.1)
 
         # plot de boringen
+        colorsDict = {1: "yellow", 4: "brown", 2: "steelblue", 0: "gray", 5: "lime", 3: "purple", 999: "white"}
         for bore in self.bores:
             boreX = bore.projectedLocation * self.line.length
             for i, layer in bore.soillayers.iterrows():
-                plt.plot([boreX, boreX], [layer.upper_NAP, layer.lower_NAP], layer.plotColor)
+                mainMaterial = layer.components[max(layer.components.keys())]
+                plotColor = colorsDict[mainMaterial]
+                plt.plot([boreX, boreX], [layer.upper_NAP, layer.lower_NAP], plotColor, lw=4) # TODO: xml boringen hebben een attribute plotColor, dat is niet meer nodig
 
         # plot de laaggrenzen als lijnen
         for boundary, points in boundaries.items():
