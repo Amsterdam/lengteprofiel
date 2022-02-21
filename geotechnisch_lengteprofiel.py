@@ -139,6 +139,11 @@ class GeotechnischLengteProfiel():
                 plt.plot([boreX, boreX], [layer.upper_NAP, layer.lower_NAP], plotColor, lw=4) # TODO: xml boringen hebben een attribute plotColor, dat is niet meer nodig
             plt.text(boreX, bore.groundlevel, bore.testid)
 
+        # plot maaiveld
+        x = [xy[0] for xy in self.groundlevelAbs.tolist()]
+        y = [xy[1] for xy in self.groundlevelAbs.tolist()]
+        plt.plot(x, y, "k--", lw=0.5)
+
         # plot de laaggrenzen als lijnen
         for boundary, points in boundaries.items():
             points = np.array(points)
@@ -223,10 +228,10 @@ class GeotechnischLengteProfiel():
         boundariesModifiedLimits = self.modify_geometry_limits(scaledBoundaries, 0, realLength)
         
         # voeg het maaiveld toe
-        boundariesModifiedLimits[1] = self.groundlevelAbs.tolist()
+        boundariesModifiedLimits[1] = self.groundlevelAbs.tolist() # TODO: is dit nog nodig? Ik heb het los toegevoegd aan de plot
         
         self.write_to_DSerie_input(boundariesModifiedLimits)
-        self.plot(boundariesModifiedLimits)
+        self.plot(boundariesModifiedLimits) # TODO: de functie is veranderd
 
     def write_to_DSerie_input(self, boundaries):
         # deze functie maakt een geometriebestand dat ingelezen kan worden in de D-Serie
