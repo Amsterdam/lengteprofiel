@@ -1,11 +1,12 @@
 # lengteprofiel
+Script om CPT en geotechnische boringen in GEF of BRO XML format te plotten in een geotechnisch lengteprofiel
+Ook is er een point & click interface om profielen met lagen te maken. Deze worden geproduceerd in png, svg en in .geo format dat gebruikt kan worden in DSerie
 
 ## Dependencies
-- See environment.yml
-- cpt_reader
+- Zie environment.yml
+- gefxml_reader
 
-## Instruction
-
+## Instruction for only plotting cpts and bores
 1. Put cpts together in a folder _cptPath_  
 2. Put bores together in another folder _borePath_  
 3. Set a _filename_
@@ -26,3 +27,12 @@
 `gtl.project_on_line()`  
 `gtl.set_groundlevel()`  
 `gtl.plot(boundaries={}, filename=filename)`  
+
+## Instructie voor het maken van een profiel met lagen
+Invoer:
+- sonderingen, als XML of GEF in een map met de naam cpts in dezelfde directory als de code
+- profiellijn, als geojson bestand
+- lagen, als excel tabel met de naam layers.xlsx in dezelfde directory als de code
+    de tabel heeft kolommen laag (nummer in dezelfde volgorde als je getekend hebt), materiaal, kleur (kleurnamen in het Engels)
+
+Run het script _geotechnisch_lengteprofiel.py_
