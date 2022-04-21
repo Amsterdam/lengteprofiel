@@ -6,7 +6,7 @@ from shapely.geometry import Point, LineString
 
 from geotechnisch_lengteprofiel import Cptverzameling, Boreverzameling, GeotechnischLengteProfiel
 
-line = LineString([(120097, 487385), (119981, 487339), (119935, 487200), (119908, 487040), (120099, 486579)]) # Deze moet je zelf opgeven
+profileName = 'test'
 
 with open ("./profiel.geojson") as f:
     line = LineString(json.loads(f.read())["features"][0]["geometry"]["coordinates"])
@@ -29,6 +29,7 @@ gtl.set_cpts(multicpt)
 gtl.set_bores(multibore)
 gtl.project_on_line()
 gtl.set_groundlevel()
+gtl.set_profilename(profileName)
 gtl.set_layers("./layers.xlsx")
 
 # instellen van variabelen

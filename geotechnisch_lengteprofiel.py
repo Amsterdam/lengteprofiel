@@ -7,7 +7,7 @@ Input:
 - sonderingen, als XML of GEF in een map met de naam cpts in dezelfde directory als de code
 - profiellijn, als geojson bestand
 - lagen, als excel tabel met de naam layers.xlsx in dezelfde directory als de code
-    de tabel heeft kolommen laag (nummer in dezelfde volgorde als je getekend hebt), materiaal, plotkleur (in het Engels)
+    de tabel heeft kolommen laag (nummer in dezelfde volgorde als je getekend hebt), materiaal, kleur (kleurnamen in het Engels)
 
 Output:
 - output.geo dat ingelezen kan worden in de D-Serie # TODO: materialen toevoegen
@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry import Point
 
 sys.path.insert(0, '..\\cpt_viewer')
-from cpt_reader import Cpt, Bore
+from gefxml_reader import Cpt, Bore
 
 class Cptverzameling():
     def __init__(self):
@@ -71,6 +71,7 @@ class GeotechnischLengteProfiel():
         self.boundaries = {}
         self.groundlevelRel = []
         self.groundlevelAbs = []
+        self.profilename = ''
 
     def set_line(self, line):
         self.line = line
@@ -80,6 +81,9 @@ class GeotechnischLengteProfiel():
 
     def set_bores(self, boreVerzameling):
         self.bores = boreVerzameling.bores
+
+    def set_profilename(self, profilename):
+        self.profilename = profilename
 
     def set_layers(self, materialsTable):
         materials = pd.read_excel(materialsTable, index_col="laag")
@@ -114,7 +118,7 @@ class GeotechnischLengteProfiel():
 
 
 
-    def plot(self, boundaries, filename): #TODO: pas op bij opschonen, de boundaries veranderen nog weleens
+    def plot(self, boundaries, profilename): #TODO: pas op bij opschonen, de boundaries veranderen nog weleens
         fig, ax1 = plt.subplots(figsize=(self.line.length / 5, 7))
 
         # plot de cpts
@@ -176,8 +180,8 @@ class GeotechnischLengteProfiel():
         ax1.set_xlabel("afstand [m]")
         ax1.set_ylabel("niveau [m t.o.v. NAP]")
 
-        plt.savefig(f"./gtl_{filename}.svg", bbox_inches="tight")
-        plt.savefig(f"./gtl_{filename}.png", bbox_inches="tight")   
+        plt.savefig(f"./gtl_{profilename}.svg", bbox_inches="tight")
+        plt.savefig(f"./gtl_{profilename}.png", bbox_inches="tight")   
 
     def add_line(self, eventorigin):
         # deze functie maakt het mogelijk om een lijn (grens) toe te voegen 
@@ -228,10 +232,10 @@ class GeotechnischLengteProfiel():
         boundariesModifiedLimits = self.modify_geometry_limits(scaledBoundaries, 0, realLength)
         
         # voeg het maaiveld toe
-        boundariesModifiedLimits[1] = self.groundlevelAbs.tolist() # TODO: is dit nog nodig? Ik heb het los toegevoegd aan de plot
+        boundariesModifiedLimits[1] = self.groundlevelAbs.tolist() # voor de DSerie input
         
         self.write_to_DSerie_input(boundariesModifiedLimits)
-        self.plot(boundariesModifiedLimits) # TODO: de functie is veranderd
+        self.plot(boundariesModifiedLimits, self.profilename)
 
     def write_to_DSerie_input(self, boundaries):
         # deze functie maakt een geometriebestand dat ingelezen kan worden in de D-Serie
