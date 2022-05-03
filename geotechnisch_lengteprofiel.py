@@ -1,7 +1,6 @@
 """
 Script om geotechnische lengteprofielen te tekenen
 Geschreven door Thomas van der Linden, Ingenieursbureau Amsterdam
-19 oktober 2021
 
 Input:
 - sonderingen, als XML of GEF in een map met de naam cpts in dezelfde directory als de code
@@ -119,7 +118,7 @@ class GeotechnischLengteProfiel():
 
 
     def plot(self, boundaries, profilename): #TODO: pas op bij opschonen, de boundaries veranderen nog weleens
-        fig, ax1 = plt.subplots(figsize=(self.line.length / 5, 7))
+        fig, ax1 = plt.subplots(figsize=(self.line.length / 20, 7))
 
         # plot de cpts
         for cpt in self.cpts:
@@ -128,7 +127,7 @@ class GeotechnischLengteProfiel():
             y = -1 * cpt.data["depth"] + cpt.groundlevel
             plt.plot(qcX, y, c="blue", linewidth=0.5)
             plt.plot(rfX, y, c="green", linewidth=0.5)
-            plt.text(qcX.min(), y.max(), cpt.testid)
+            plt.text(qcX.min(), y.max(), cpt.testid, rotation="vertical")
             plt.grid(b=True)
             plt.minorticks_on()
             plt.grid(b=True, which="minor", lw=0.1)
@@ -141,7 +140,7 @@ class GeotechnischLengteProfiel():
                 mainMaterial = layer.components[max(layer.components.keys())]
                 plotColor = colorsDict[mainMaterial]
                 plt.plot([boreX, boreX], [layer.upper_NAP, layer.lower_NAP], plotColor, lw=4) # TODO: xml boringen hebben een attribute plotColor, dat is niet meer nodig
-            plt.text(boreX, bore.groundlevel, bore.testid)
+            plt.text(boreX, bore.groundlevel, bore.testid, rotation="vertical")
 
         # plot maaiveld
         x = [xy[0] for xy in self.groundlevelAbs.tolist()]
