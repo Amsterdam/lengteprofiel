@@ -23,6 +23,7 @@ Afhankelijkheden
 """
 
 
+from ctypes.wintypes import POINT
 import numpy as np
 import pandas as pd
 import sys
@@ -30,6 +31,8 @@ import tkinter as tk
 from datetime import datetime
 import matplotlib.pyplot as plt
 from shapely.geometry import Point
+import contextily as cx
+import geopandas as gpd
 
 sys.path.insert(0, '..\\cpt_viewer')
 from gefxml_reader import Cpt, Bore
@@ -118,7 +121,8 @@ class GeotechnischLengteProfiel():
 
 
     def plot(self, boundaries, profilename): #TODO: pas op bij opschonen, de boundaries veranderen nog weleens
-        fig, ax1 = plt.subplots(figsize=(self.line.length / 20, 7))
+        fig = plt.figure(figsize=(self.line.length / 20, 7))
+        ax1 = fig.add_subplot(211)
 
         # plot de cpts
         for cpt in self.cpts:
@@ -173,9 +177,34 @@ class GeotechnischLengteProfiel():
                 allYBottom = np.interp(allX, xBottom, yBottom)            
 
                 plt.fill_between(allX, allYBottom, allYTop, color=self.materials.loc[boundary]["kleur"])
-                
+
+        # Tweede as aan de rechterkant van de plot
         ax2 = ax1.twinx().set_ylim(ax1.get_ylim())
         
+        # Voeg een kaart toe
+        ax3 = fig.add_subplot(212)
+        
+        pointdict = {}
+        for cpt in self.cpts:
+            pointdict[cpt.testid] = {'geometry': Point(cpt.easting, cpt.northing)}
+        for bore in self.bores:
+            pointdict[bore.testid] = {'geometry': Point(bore.easting, bore.northing)}
+        
+        linedf = pd.DataFrame().from_dict({'line': {'geometry': self.line}}).T
+        linegdf = gpd.GeoDataFrame(linedf, geometry='geometry').set_crs('epsg:28992')
+        pointdf = pd.DataFrame().from_dict(pointdict).T
+        pointgdf = gpd.GeoDataFrame(pointdf, geometry='geometry').set_crs('epsg:28992')
+
+        linegdf.plot(ax=ax3)
+        pointgdf.plot(ax=ax3)
+
+        for test, row in pointgdf.iterrows():
+            x = getattr(row, 'geometry').x
+            y = getattr(row, 'geometry').y
+            ax3.annotate(test, [x,y])
+        cx.add_basemap(ax3, crs=pointgdf.crs.to_string())
+
+
         ax1.set_xlabel("afstand [m]")
         ax1.set_ylabel("niveau [m t.o.v. NAP]")
 
