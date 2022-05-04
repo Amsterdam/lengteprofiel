@@ -30,7 +30,7 @@ import sys
 import tkinter as tk
 from datetime import datetime
 import matplotlib.pyplot as plt
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString
 import contextily as cx
 import geopandas as gpd
 
@@ -195,15 +195,28 @@ class GeotechnischLengteProfiel():
         pointdf = pd.DataFrame().from_dict(pointdict).T
         pointgdf = gpd.GeoDataFrame(pointdf, geometry='geometry').set_crs('epsg:28992')
 
-        linegdf.plot(ax=ax3)
-        pointgdf.plot(ax=ax3)
+        from matplotlib import transforms
+        base = ax3.transData
+        x = self.line.interpolate(0.5).x
+        y = self.line.interpolate(0.5).y
+
+        north = [0, 1]
+        bbox = self.line.bounds
+        gen_line = [bbox[0] - bbox[2], bbox[1] - bbox[3]] / np.linalg.norm([bbox[0] - bbox[2], bbox[1] - bbox[3]])
+        angle = 0.5 * np.pi - np.arccos(np.dot(north, gen_line))
+
+        print(angle)
+
+        rot = transforms.Affine2D().rotate_around(x, y, angle)
+        
+        linegdf.plot(ax=ax3, transform=rot+base)
+        pointgdf.plot(ax=ax3, transform=rot+base)
 
         for test, row in pointgdf.iterrows():
             x = getattr(row, 'geometry').x
             y = getattr(row, 'geometry').y
             ax3.annotate(test, [x,y])
-        cx.add_basemap(ax3, crs=pointgdf.crs.to_string())
-
+        cx.add_basemap(ax3, crs=pointgdf.crs.to_string(), transform=rot+base)
 
         ax1.set_xlabel("afstand [m]")
         ax1.set_ylabel("niveau [m t.o.v. NAP]")
