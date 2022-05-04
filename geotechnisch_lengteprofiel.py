@@ -197,19 +197,29 @@ class GeotechnischLengteProfiel():
         # draai het profiel op de kaart naar oost-west oriëntatie
         from matplotlib import transforms
         base = ax3.transData
+        # punt midden op de lijn als centrum voor de rotaties
         x = self.line.interpolate(0.5).x
         y = self.line.interpolate(0.5).y
-
+        
         north = [0, 1]
+        # twee verschillende mogelijkheden om de generale trend van de lijn te bepalen
+        # TODO: beide geven niet in alle gevallen goede resultaten
+        # optie 1 met bbox
         bbox = self.line.bounds
-        gen_line = [bbox[0] - bbox[2], bbox[1] - bbox[3]] / np.linalg.norm([bbox[0] - bbox[2], bbox[1] - bbox[3]])
-        angle = 0.5 * np.pi - np.arccos(np.dot(north, gen_line))
+        #gen_line = [bbox[0] - bbox[2], bbox[1] - bbox[3]] / np.linalg.norm([bbox[0] - bbox[2], bbox[1] - bbox[3]])
+        #optie 2 met eerste en laatste punt
+        p1 = self.line.interpolate(0.).x - self.line.interpolate(1.0).x
+        p2 = self.line.interpolate(0.).y - self.line.interpolate(1.0).y
+        gen_line = [p1, p2] / np.linalg.norm([p1, p2])
+
+        angle = 0.5 * np.pi - np.arccos(np.dot(north, gen_line)) # 0.5 * pi om te zorgen dat de lijn links-rechts geörienteerd wordt
         rot = transforms.Affine2D().rotate_around(x, y, angle)
         
         # plot de lijn en de punten
         linegdf.plot(ax=ax3, transform=rot+base)
         pointgdf.plot(ax=ax3, transform=rot+base)
 
+        # nog een bbox om achtergrondkaart te laden, anders krijg je een deel zonder kaart
         bboxdict = {'bbox': {'geometry': box(bbox[0] - 50, bbox[1] - 25, bbox[2] + 50, bbox[3] + 25)}}
         bboxdf = pd.DataFrame().from_dict(bboxdict).T
         bboxgdf = gpd.GeoDataFrame(bboxdf, geometry='geometry').set_crs('epsg:28992')
@@ -230,11 +240,13 @@ class GeotechnischLengteProfiel():
             texty = point.y
             ax3.annotate(test, [textx, texty], rotation='vertical')
 
-
+        # stel de assen in
         ax1.set_xlabel("afstand [m]")
         ax1.set_ylabel("niveau [m t.o.v. NAP]")
 
         ax3.axis('off')
+
+        plt.suptitle(profilename)
 
         plt.savefig(f"./gtl_{profilename}.svg", bbox_inches="tight")
         plt.savefig(f"./gtl_{profilename}.png", bbox_inches="tight")   
