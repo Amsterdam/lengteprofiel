@@ -22,16 +22,15 @@ Afhankelijkheden
 - standaard Python packages
 """
 
-
-from ctypes.wintypes import POINT
 import numpy as np
 import pandas as pd
 import sys
 import tkinter as tk
 from datetime import datetime
 import matplotlib.pyplot as plt
-from shapely.geometry import Point, LineString
-import contextily as cx
+from shapely.geometry import Point, box
+import shapely.affinity as sa
+import contextily as ctx
 import geopandas as gpd
 
 sys.path.insert(0, '..\\cpt_viewer')
@@ -195,6 +194,7 @@ class GeotechnischLengteProfiel():
         pointdf = pd.DataFrame().from_dict(pointdict).T
         pointgdf = gpd.GeoDataFrame(pointdf, geometry='geometry').set_crs('epsg:28992')
 
+        # draai het profiel op de kaart naar oost-west oriëntatie
         from matplotlib import transforms
         base = ax3.transData
         x = self.line.interpolate(0.5).x
@@ -204,22 +204,37 @@ class GeotechnischLengteProfiel():
         bbox = self.line.bounds
         gen_line = [bbox[0] - bbox[2], bbox[1] - bbox[3]] / np.linalg.norm([bbox[0] - bbox[2], bbox[1] - bbox[3]])
         angle = 0.5 * np.pi - np.arccos(np.dot(north, gen_line))
-
-        print(angle)
-
         rot = transforms.Affine2D().rotate_around(x, y, angle)
         
+        # plot de lijn en de punten
         linegdf.plot(ax=ax3, transform=rot+base)
         pointgdf.plot(ax=ax3, transform=rot+base)
 
-        for test, row in pointgdf.iterrows():
-            x = getattr(row, 'geometry').x
-            y = getattr(row, 'geometry').y
-            ax3.annotate(test, [x,y])
-        cx.add_basemap(ax3, crs=pointgdf.crs.to_string(), transform=rot+base)
+        bboxdict = {'bbox': {'geometry': box(bbox[0] - 50, bbox[1] - 25, bbox[2] + 50, bbox[3] + 25)}}
+        bboxdf = pd.DataFrame().from_dict(bboxdict).T
+        bboxgdf = gpd.GeoDataFrame(bboxdf, geometry='geometry').set_crs('epsg:28992')
+        bboxgdf.plot(ax=ax3, facecolor='none', edgecolor='none') # deze lijkt niet nodig, maar moet blijven staan
+
+        # voeg een achtergrondkaart toe
+        _ = ctx.bounds2raster(*bboxgdf.to_crs('epsg:3857').total_bounds, path='./temp.tiff', zoom=18)
+        ctx.add_basemap(ax3, crs=bboxgdf.crs.to_string(), transform=rot+base, zoom=18, source='./temp.tiff')
+
+        # assen afsnijden
+        plotbox = linegdf.rotate(angle, [x,y], use_radians=True).total_bounds
+        ax3.set_xlim(plotbox[0] - 50, plotbox[2] + 50)
+        ax3.set_ylim(plotbox[1] - 25, plotbox[3] + 25)
+
+        # voeg tekst toe aan de meetpunten
+        for test, point in pointgdf.rotate(angle, [x,y], use_radians=True).iteritems(): 
+            textx = point.x
+            texty = point.y
+            ax3.annotate(test, [textx, texty], rotation='vertical')
+
 
         ax1.set_xlabel("afstand [m]")
         ax1.set_ylabel("niveau [m t.o.v. NAP]")
+
+        ax3.axis('off')
 
         plt.savefig(f"./gtl_{profilename}.svg", bbox_inches="tight")
         plt.savefig(f"./gtl_{profilename}.png", bbox_inches="tight")   
