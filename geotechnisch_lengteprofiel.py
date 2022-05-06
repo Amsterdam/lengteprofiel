@@ -22,6 +22,14 @@ Afhankelijkheden
 - standaard Python packages
 """
 
+__author__ = "Thomas van der Linden"
+__credits__ = ""
+__license__ = "MPL-2.0"
+__version__ = ""
+__maintainer__ = "Thomas van der Linden"
+__email__ = "t.van.der.linden@amsterdam.nl"
+__status__ = "Dev"
+
 import numpy as np
 import pandas as pd
 import sys
@@ -130,20 +138,20 @@ class GeotechnischLengteProfiel():
             y = -1 * cpt.data["depth"] + cpt.groundlevel
             plt.plot(qcX, y, c="blue", linewidth=0.5)
             plt.plot(rfX, y, c="green", linewidth=0.5)
-            plt.text(qcX.min(), y.max(), cpt.testid, rotation="vertical")
+            plt.text(qcX.min(), y.max(), cpt.testid, rotation="vertical", fontsize='x-small')
             plt.grid(b=True)
             plt.minorticks_on()
             plt.grid(b=True, which="minor", lw=0.1)
 
         # plot de boringen
-        colorsDict = {1: "yellow", 4: "brown", 2: "steelblue", 0: "gray", 5: "lime", 3: "purple", 999: "black"}
+        colorsDict = {1: "yellow", 4: "brown", 2: "steelblue", 0: "gray", 5: "lime", 3: "purple", 6: "black"}
         for bore in self.bores:
             boreX = bore.projectedLocation * self.line.length
             for i, layer in bore.soillayers.iterrows():
                 mainMaterial = layer.components[max(layer.components.keys())]
                 plotColor = colorsDict[mainMaterial]
                 plt.plot([boreX, boreX], [layer.upper_NAP, layer.lower_NAP], plotColor, lw=4) # TODO: xml boringen hebben een attribute plotColor, dat is niet meer nodig
-            plt.text(boreX, bore.groundlevel, bore.testid, rotation="vertical")
+            plt.text(boreX, bore.groundlevel, bore.testid, rotation="vertical", fontsize='x-small')
 
         # plot maaiveld
         x = [xy[0] for xy in self.groundlevelAbs.tolist()]
@@ -202,17 +210,21 @@ class GeotechnischLengteProfiel():
         y = self.line.interpolate(0.5).y
         
         north = [0, 1]
-        # twee verschillende mogelijkheden om de generale trend van de lijn te bepalen
-        # TODO: beide geven niet in alle gevallen goede resultaten
-        # optie 1 met bbox
-        bbox = self.line.bounds
-        #gen_line = [bbox[0] - bbox[2], bbox[1] - bbox[3]] / np.linalg.norm([bbox[0] - bbox[2], bbox[1] - bbox[3]])
-        #optie 2 met eerste en laatste punt
-        p1 = self.line.interpolate(0.).x - self.line.interpolate(1.0).x
-        p2 = self.line.interpolate(0.).y - self.line.interpolate(1.0).y
+
+        # bepaal de generale trend van de lijn
+        # omdat er regelmatig een haakje zit aan een einde, gebruiken we het middenstuk van de lijn
+        # TODO: de lijn plot soms toch niet horizontaal
+        p1 = self.line.interpolate(0.3).x - self.line.interpolate(0.7).x
+        p2 = self.line.interpolate(0.3).y - self.line.interpolate(0.7).y
         gen_line = [p1, p2] / np.linalg.norm([p1, p2])
 
-        angle = 0.5 * np.pi - np.arccos(np.dot(north, gen_line)) # 0.5 * pi om te zorgen dat de lijn links-rechts geörienteerd wordt
+        # arccos gebruikt maar de helft van de cirkel, daarom een check in welk kwadrant de vector zit
+        # 0.5 * pi om te zorgen dat de lijn links-rechts geörienteerd wordt
+        xtest = self.line.interpolate(0.3).x < self.line.interpolate(0.7).x
+        if xtest:
+            angle = 0.5 * np.pi - np.arccos(np.dot(gen_line, north)) 
+        else:
+            angle = 0.5 * np.pi + np.arccos(np.dot(gen_line, north))
         rot = transforms.Affine2D().rotate_around(x, y, angle)
         
         # plot de lijn en de punten
@@ -220,6 +232,7 @@ class GeotechnischLengteProfiel():
         pointgdf.plot(ax=ax3, transform=rot+base)
 
         # nog een bbox om achtergrondkaart te laden, anders krijg je een deel zonder kaart
+        bbox = self.line.bounds
         bboxdict = {'bbox': {'geometry': box(bbox[0] - 50, bbox[1] - 25, bbox[2] + 50, bbox[3] + 25)}}
         bboxdf = pd.DataFrame().from_dict(bboxdict).T
         bboxgdf = gpd.GeoDataFrame(bboxdf, geometry='geometry').set_crs('epsg:28992')
@@ -238,7 +251,7 @@ class GeotechnischLengteProfiel():
         for test, point in pointgdf.rotate(angle, [x,y], use_radians=True).iteritems(): 
             textx = point.x
             texty = point.y
-            ax3.annotate(test, [textx, texty], rotation='vertical')
+            ax3.annotate(test, [textx, texty], rotation='vertical', fontsize='xx-small')
 
         # stel de assen in
         ax1.set_xlabel("afstand [m]")
@@ -247,9 +260,10 @@ class GeotechnischLengteProfiel():
         ax3.axis('off')
 
         plt.suptitle(profilename)
+        fig.text(0.05, 0.15, 'Ingenieursbureau Gemeente Amsterdam - Team WGM - Vakgroep Geotechniek', fontsize='x-small')
 
-        plt.savefig(f"./gtl_{profilename}.svg", bbox_inches="tight")
-        plt.savefig(f"./gtl_{profilename}.png", bbox_inches="tight")   
+        plt.savefig(f"./output/gtl_{profilename}.svg", bbox_inches="tight")
+        plt.savefig(f"./output/gtl_{profilename}.png", bbox_inches="tight")   
 
     def add_line(self, eventorigin):
         # deze functie maakt het mogelijk om een lijn (grens) toe te voegen 
