@@ -188,6 +188,22 @@ class GeotechnischLengteProfiel():
         # Tweede as aan de rechterkant van de plot
         ax2 = ax1.twinx().set_ylim(ax1.get_ylim())
         
+        # stel de assen in
+        ax1.set_xlabel("afstand [m]")
+        ax1.set_ylabel("niveau [m t.o.v. NAP]")
+
+        plt.suptitle(profilename)
+        fig.text(0.05, 0.15, 'Ingenieursbureau Gemeente Amsterdam - Team WGM - Vakgroep Geotechniek', fontsize='x-small')
+
+        addMap = False
+        if addMap:
+            fig = self.add_map(fig)
+
+
+        plt.savefig(f"./output/gtl_{profilename}.svg", bbox_inches="tight")
+        plt.savefig(f"./output/gtl_{profilename}.png", bbox_inches="tight")   
+
+    def add_map_to_plot(self, fig):
         # Voeg een kaart toe
         ax3 = fig.add_subplot(212)
         
@@ -220,10 +236,17 @@ class GeotechnischLengteProfiel():
 
         # arccos gebruikt maar de helft van de cirkel, daarom een check in welk kwadrant de vector zit
         # 0.5 * pi om te zorgen dat de lijn links-rechts geörienteerd wordt
-        xtest = self.line.interpolate(0.3).x < self.line.interpolate(0.7).x
-        if xtest:
+        # TODO: De rotatie is niet altijd correct
+        xtest = self.line.interpolate(0.).x < self.line.interpolate(1.).x
+        ytest = self.line.interpolate(0.).y < self.line.interpolate(1.).y
+
+        if xtest and ytest:
             angle = 0.5 * np.pi - np.arccos(np.dot(gen_line, north)) 
-        else:
+        elif xtest and not ytest:
+            angle = 0.5 * np.pi - np.arccos(np.dot(gen_line, north)) 
+        elif not xtest and not ytest:
+            angle = 0.5 * np.pi + np.arccos(np.dot(gen_line, north)) 
+        elif not xtest and ytest:
             angle = 0.5 * np.pi + np.arccos(np.dot(gen_line, north))
         rot = transforms.Affine2D().rotate_around(x, y, angle)
         
@@ -239,8 +262,12 @@ class GeotechnischLengteProfiel():
         bboxgdf.plot(ax=ax3, facecolor='none', edgecolor='none') # deze lijkt niet nodig, maar moet blijven staan
 
         # voeg een achtergrondkaart toe
-        _ = ctx.bounds2raster(*bboxgdf.to_crs('epsg:3857').total_bounds, path='./temp.tiff', zoom=18)
-        ctx.add_basemap(ax3, crs=bboxgdf.crs.to_string(), transform=rot+base, zoom=18, source='./temp.tiff')
+        # omdat deze nog weleens een foutmelding geeft, een try-except
+        try:
+            _ = ctx.bounds2raster(*bboxgdf.to_crs('epsg:3857').total_bounds, path='./temp.tiff')
+            ctx.add_basemap(ax3, crs=bboxgdf.crs.to_string(), transform=rot+base, source='./temp.tiff')
+        except:
+            pass
 
         # assen afsnijden
         plotbox = linegdf.rotate(angle, [x,y], use_radians=True).total_bounds
@@ -253,17 +280,11 @@ class GeotechnischLengteProfiel():
             texty = point.y
             ax3.annotate(test, [textx, texty], rotation='vertical', fontsize='xx-small')
 
-        # stel de assen in
-        ax1.set_xlabel("afstand [m]")
-        ax1.set_ylabel("niveau [m t.o.v. NAP]")
-
         ax3.axis('off')
 
-        plt.suptitle(profilename)
-        fig.text(0.05, 0.15, 'Ingenieursbureau Gemeente Amsterdam - Team WGM - Vakgroep Geotechniek', fontsize='x-small')
+        return fig
 
-        plt.savefig(f"./output/gtl_{profilename}.svg", bbox_inches="tight")
-        plt.savefig(f"./output/gtl_{profilename}.png", bbox_inches="tight")   
+
 
     def add_line(self, eventorigin):
         # deze functie maakt het mogelijk om een lijn (grens) toe te voegen 

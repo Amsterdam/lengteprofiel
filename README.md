@@ -1,38 +1,36 @@
 # lengteprofiel
-Script om CPT en geotechnische boringen in GEF of BRO XML format te plotten in een geotechnisch lengteprofiel
-Ook is er een point & click interface om profielen met lagen te maken. Deze worden geproduceerd in png, svg en in .geo format dat gebruikt kan worden in DSerie
+Scripts om CPT en geotechnische boringen in GEF of BRO XML format te plotten in een geotechnisch lengteprofiel
+Er zijn er twee kant en klaar scripts om profielen te maken:
+- _plot_cpt_in_lengteprofiel.py_ plot boringen en sonderingen in een lengteprofiel.
+- _verwerk_geotechnisch_lengteprofiel.py_ geeft point & click interface om lagen te tekenen bij boringen en sonderingen.
+Uitvoer in png, svg en als er lagen zijn gemaakt .geo-format dat gebruikt kan worden in DSerie
 
 ## Dependencies
-- Zie environment.yml
-- gefxml_reader
+* Zie environment.yml
+* [gefxml_reader](https://github.com/Amsterdam/gefxml_viewer)
 
-## Instruction for only plotting cpts and bores
-1. Put cpts together in a folder _cptPath_  
-2. Put bores together in another folder _borePath_  
-3. Set a _filename_
-4. Run code  
-5. PNG and SVG files are created in the same folder
-`fileList = os.listdir(cptPath)`  
-`fileList = [cptPath + f for f in fileList]`  
-`multicpt = Cptverzameling()`  
-`multicpt.load_multi_cpt(fileList)`  
-`fileList = os.listdir(borePath)`  
-`fileList = [borePath + f for f in fileList]`  
-`multibore = Boreverzameling()`  
-`multibore.load_multi_bore(fileList)`  
-`gtl = GeotechnischLengteProfiel()`  
-`gtl.set_line(line)`  
-`gtl.set_cpts(multicpt)`  
-`gtl.set_bores(multibore)`  
-`gtl.project_on_line()`  
-`gtl.set_groundlevel()`  
-`gtl.plot(boundaries={}, filename=filename)`  
+# Heb je geen ervaring met Python? Volg dan deze stappen
 
-## Instructie voor het maken van een profiel met lagen
-Invoer:
-- sonderingen, als XML of GEF in een map met de naam cpts in dezelfde directory als de code
-- profiellijn, als geojson bestand
-- lagen, als excel tabel met de naam layers.xlsx in dezelfde directory als de code
-    de tabel heeft kolommen laag (nummer in dezelfde volgorde als je getekend hebt), materiaal, kleur (kleurnamen in het Engels)
+## De applicatie opslaan
+1. Voer eerst de stappen uit van de [gefxml_reader](https://github.com/Amsterdam/gefxml_viewer)
+1. In de map _scripts_ maak je ook een map _lengteprofiel_
+1. In de map _lengteprofiel_ maak je een map _input_ en een map _output_
+1. Ga naar de map _lengteprofiel_. Klik met de rechtermuisknop en kies voor _Git bash here_
+1. Kopieer en plak (met rechtse muisknop of shift + Insert):
+* `git init` (dit is eenmalig)
+* `git pull https://github.com/Amsterdam/lengteprofiel.git`
+1. Je kan het Git bash venster nu afsluiten met `exit`
 
-Run het script _geotechnisch_lengteprofiel.py_
+## Input bestanden klaar zetten
+1. Maak in GIS een geojson bestand met daarin 1 lijn (mag meer dan 2 punten hebben)
+1. Sla het geojson bestand op in de map _input_ als _profiel.geojson_
+1. Sla in deze map ook de gef of xml bestanden van de sonderingen en boringen op
+
+## Profielen maken
+1. Ga naar de Windows startknop en type daar `cmd`
+1. Kies _Anaconda Prompt (Miniconda3)_
+1. Ga in de prompt naar de map _lengteprofiel_ 
+1. Kopieer en plak:
+* `conda activate geo_env` (dit moet je iedere keer doen wanneer je begint met een sessie)
+* `python maak_lengteprofiel.py`
+1. Kijk in de map _output_ of daar een png en een svg zijn gemaakt
