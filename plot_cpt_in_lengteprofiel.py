@@ -48,14 +48,3 @@ def plotBoreCptInProfile(multicpt, multibore, line, profileName):
     gtl.project_on_line()
     gtl.set_groundlevel()
     gtl.plot(boundaries={}, profilename=profileName)
-
-
-kades = ["DCG0101", "DCG0102", "DCG0201", "DCG0202", "DCG0301", "DCG0302", "DCG0401", "DCG0402", "DCG0501", "DCG0502", "JLK0102", "HGG0102", "HGG0103"] 
-kades = ["KBW0202"]
-for kade in kades:
-    print(kade)
-    objectGDF = gpd.read_file("../../data/GIS/Kademuren/Kade Kunstwerk_20191007.geojson") # code loopt vast op de shp
-    line = objectGDF[objectGDF['KUNSTWERKN'] == kade]['geometry'].iloc[0]
-    boreList, cptList = readCptBores(f'../verzamel_grondonderzoek/omgenoemd/{kade}/')
-    multicpt, multibore = make_multibore_multicpt(boreList, cptList)
-    plotBoreCptInProfile(multicpt, multibore, line, kade)
