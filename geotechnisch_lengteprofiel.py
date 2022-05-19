@@ -144,13 +144,14 @@ class GeotechnischLengteProfiel():
             plt.grid(b=True, which="minor", lw=0.1)
 
         # plot de boringen
-        colorsDict = {1: "yellow", 4: "brown", 2: "steelblue", 0: "gray", 5: "lime", 3: "purple", 6: "black"}
+        materials = {0: 'grind', 1: 'zand', 2: 'klei', 3: 'leem', 4: 'veen', 5: 'silt', 6: 'overig'}
+        colorsDict = {0: "orange", 1: "yellow", 2: "green", 3: "yellowgreen", 4: "brown", 5: "grey", 6: "black"} # BRO style # TODO: import from gefxml_viewer?
         for bore in self.bores:
             boreX = bore.projectedLocation * self.line.length
             for i, layer in bore.soillayers['veld'].iterrows(): # plot alleen de veldbeschrijving, deze is als optie toegevoegd rond 19 mei 2022 aan de gefxml_viewer
                 mainMaterial = layer.components[max(layer.components.keys())]
                 plotColor = colorsDict[mainMaterial]
-                plt.plot([boreX, boreX], [layer.upper_NAP, layer.lower_NAP], plotColor, lw=4) # TODO: xml boringen hebben een attribute plotColor, dat is niet meer nodig
+                plt.plot([boreX, boreX], [layer.upper_NAP, layer.lower_NAP], plotColor, lw=4, alpha=0.7) # TODO: xml boringen hebben een attribute plotColor, dat is niet meer nodig
             plt.text(boreX, bore.groundlevel, bore.testid, rotation="vertical", fontsize='x-small')
 
         # plot maaiveld
