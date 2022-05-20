@@ -13,13 +13,11 @@ Uitvoer in png, svg en als er lagen zijn gemaakt .geo-format dat gebruikt kan wo
 
 ## De applicatie opslaan
 1. Voer eerst de stappen uit van de [gefxml_reader](https://github.com/Amsterdam/gefxml_viewer)
-1. In de map _scripts_ maak je ook een map _lengteprofiel_
-1. In de map _lengteprofiel_ maak je een map _input_ en een map _output_
-1. Ga naar de map _lengteprofiel_. Klik met de rechtermuisknop en kies voor _Git bash here_
+1. Ga naar de map _scripts_. Klik met de rechtermuisknop en kies voor _Git bash here_
 1. Kopieer en plak (met rechtse muisknop of shift + Insert):
-* `git init` (dit is eenmalig)
-* `git pull https://github.com/Amsterdam/lengteprofiel.git`
+`git clone https://github.com/Amsterdam/lengteprofiel.git`
 1. Je kan het Git bash venster nu afsluiten met `exit`
+1. Controleer of er in de map _lengteprofiel_ een map is met de naam _input_ en een map _output_
 
 ## Input bestanden klaar zetten
 1. Maak in GIS een geojson bestand met daarin 1 lijn (mag meer dan 2 punten hebben)
@@ -34,3 +32,9 @@ Uitvoer in png, svg en als er lagen zijn gemaakt .geo-format dat gebruikt kan wo
 * `conda activate geo_env` (dit moet je iedere keer doen wanneer je begint met een sessie)
 * `python maak_lengteprofiel.py`
 1. Kijk in de map _output_ of daar een png en een svg zijn gemaakt
+
+## Vragen of opmerkingen?
+1. Stuur een bericht aan Thomas van der Linden, bijvoorbeeld via [LinkedIn](https://www.linkedin.com/in/tjmvanderlinden/)
+
+## Resultaten?
+1. Heb je mooie resultaten gemaakt met deze applicatie? We vinden het heel leuk als je ze deelt (en Thomas tagt)

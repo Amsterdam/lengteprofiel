@@ -41,7 +41,7 @@ import shapely.affinity as sa
 import contextily as ctx
 import geopandas as gpd
 
-sys.path.insert(0, '..\\cpt_viewer')
+sys.path.insert(0, '../gefxml_viewer')
 from gefxml_reader import Cpt, Bore
 
 class Cptverzameling():

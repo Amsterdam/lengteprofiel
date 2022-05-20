@@ -7,7 +7,7 @@ import geopandas as gpd
 import sys
 
 from geotechnisch_lengteprofiel import Cptverzameling, Boreverzameling, GeotechnischLengteProfiel
-sys.path.insert(0, '..\\cpt_viewer')
+sys.path.insert(0, '../gefxml_viewer')
 from gefxml_reader import Cpt, Bore, Test
 
 def readCptBores(path):
