@@ -131,6 +131,11 @@ class GeotechnischLengteProfiel():
         fig = plt.figure(figsize=(self.line.length / 20, 7))
         ax1 = fig.add_subplot(211)
 
+        # maak een grid
+        plt.grid(b=True)
+        plt.minorticks_on()
+        plt.grid(b=True, which="minor", lw=0.1)
+        
         # plot de cpts
         for cpt in self.cpts:
             qcX = cpt.data["coneResistance"] / 2 + cpt.projectedLocation * self.line.length # TODO: ipv een vaste waarde een factor afhankelijk van aantal cpts en tussenafstand?
@@ -138,21 +143,56 @@ class GeotechnischLengteProfiel():
             y = -1 * cpt.data["depth"] + cpt.groundlevel
             plt.plot(qcX, y, c="blue", linewidth=0.5)
             plt.plot(rfX, y, c="green", linewidth=0.5)
-            plt.text(qcX.min(), y.max(), cpt.testid, rotation="vertical", fontsize='x-small')
-            plt.grid(b=True)
-            plt.minorticks_on()
-            plt.grid(b=True, which="minor", lw=0.1)
+            # labels in de figuur kunnen storend zijn, daarom een optie om ze uit te zetten
+            # TODO: dit moet ergens anders ingesteld.
+            includeLabels = True
+            if includeLabels:
+                plt.text(qcX.min(), y.max(), cpt.testid, rotation="vertical", fontsize='x-small')
 
         # plot de boringen
         materials = {0: 'grind', 1: 'zand', 2: 'klei', 3: 'leem', 4: 'veen', 5: 'silt', 6: 'overig'}
         colorsDict = {0: "orange", 1: "yellow", 2: "green", 3: "yellowgreen", 4: "brown", 5: "grey", 6: "black"} # BRO style # TODO: import from gefxml_viewer?
-        for bore in self.bores:
-            boreX = bore.projectedLocation * self.line.length
-            for i, layer in bore.soillayers['veld'].iterrows(): # plot alleen de veldbeschrijving, deze is als optie toegevoegd rond 19 mei 2022 aan de gefxml_viewer
-                mainMaterial = layer.components[max(layer.components.keys())]
-                plotColor = colorsDict[mainMaterial]
-                plt.plot([boreX, boreX], [layer.upper_NAP, layer.lower_NAP], plotColor, lw=4, alpha=0.7) # TODO: xml boringen hebben een attribute plotColor, dat is niet meer nodig
-            plt.text(boreX, bore.groundlevel, bore.testid, rotation="vertical", fontsize='x-small')
+
+        # voeg een legenda toe
+        import matplotlib.patches as mpatches
+        handles = []
+        for i in materials.keys():
+            handles.append(mpatches.Patch(color=colorsDict[i], label=materials[i]))
+        ax1.legend(handles=handles, fontsize='xx-small')
+
+        plotAllMaterial = True
+        if plotAllMaterial:
+            for bore in self.bores:
+                boreX = bore.projectedLocation * self.line.length
+                for descriptionLocation, soillayers in bore.soillayers.items():
+                    uppers = list(soillayers["upper_NAP"])
+                    lowers = list(soillayers["lower_NAP"])
+                    components = list(soillayers["components"])
+
+                    for upper, lower, component in reversed(list(zip(uppers, lowers, components))):
+                        left = 0
+                        # TODO: kan dit beter. Gemaakt vanwege een geval met component = nan (lab boring van Anthony Moddermanstraat)
+                        for comp, nr in component.items():
+                            barPlot = plt.barh(lower, width=2*comp, left=left+boreX, height=upper-lower, color=colorsDict[nr], align="edge")
+                            left += 2*comp
+                    # labels in de figuur kunnen storend zijn, daarom een optie om ze uit te zetten
+                    # TODO: dit moet ergens anders ingesteld.
+                    includeLabels = True
+                    if includeLabels:
+                        plt.text(boreX, bore.groundlevel, bore.testid, rotation="vertical", fontsize='x-small')
+        else:
+            # maak een eenvoudige plot van een boring
+            for bore in self.bores:
+                boreX = bore.projectedLocation * self.line.length
+                for i, layer in bore.soillayers['veld'].iterrows(): # plot alleen de veldbeschrijving, deze is als optie toegevoegd rond 19 mei 2022 aan de gefxml_viewer
+                    mainMaterial = layer.components[max(layer.components.keys())]
+                    plotColor = colorsDict[mainMaterial]
+                    plt.plot([boreX, boreX], [layer.upper_NAP, layer.lower_NAP], plotColor, lw=4, alpha=0.7) # TODO: xml boringen hebben een attribute plotColor, dat is niet meer nodig
+                # labels in de figuur kunnen storend zijn, daarom een optie om ze uit te zetten
+                # TODO: dit moet ergens anders ingesteld.
+                includeLabels = True
+                if includeLabels:
+                    plt.text(boreX, bore.groundlevel, bore.testid, rotation="vertical", fontsize='x-small')
 
         # plot maaiveld
         x = [xy[0] for xy in self.groundlevelAbs.tolist()]
@@ -186,6 +226,10 @@ class GeotechnischLengteProfiel():
 
                 plt.fill_between(allX, allYBottom, allYTop, color=self.materials.loc[boundary]["kleur"])
 
+        plotTop = True # TODO: dit moet ergens anders als variabele worden doorgegeven
+        if plotTop:
+            ax1.set_ylim(-5, 2)
+
         # Tweede as aan de rechterkant van de plot
         ax2 = ax1.twinx().set_ylim(ax1.get_ylim())
         
@@ -196,9 +240,9 @@ class GeotechnischLengteProfiel():
         plt.suptitle(profilename)
         fig.text(0.05, 0.15, 'Ingenieursbureau Gemeente Amsterdam - Team WGM - Vakgroep Geotechniek', fontsize='x-small')
 
-        addMap = False
+        addMap = True
         if addMap:
-            fig = self.add_map(fig)
+            fig = self.add_map_to_plot(fig)
 
 
         plt.savefig(f"./output/gtl_{profilename}.svg", bbox_inches="tight")
@@ -265,7 +309,7 @@ class GeotechnischLengteProfiel():
         # voeg een achtergrondkaart toe
         # omdat deze nog weleens een foutmelding geeft, een try-except
         try:
-            _ = ctx.bounds2raster(*bboxgdf.to_crs('epsg:3857').total_bounds, path='./temp.tiff')
+            _ = ctx.bounds2raster(*bboxgdf.to_crs('epsg:3857').total_bounds, path='./temp.tiff', zoom=17)
             ctx.add_basemap(ax3, crs=bboxgdf.crs.to_string(), transform=rot+base, source='./temp.tiff')
         except:
             pass
