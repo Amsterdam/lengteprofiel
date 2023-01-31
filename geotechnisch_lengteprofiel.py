@@ -40,6 +40,7 @@ from shapely.geometry import Point, box
 import shapely.affinity as sa
 import contextily as ctx
 import geopandas as gpd
+import os
 
 sys.path.insert(0, '../gefxml_viewer')
 from gefxml_reader import Cpt, Bore
@@ -50,13 +51,14 @@ class Cptverzameling():
 
     def load_multi_cpt(self, fileList):
         for f in fileList:
+            print(f)
             cpt = Cpt()
             if f.lower().endswith("xml"):
-                cpt.load_xml(f)
+                cpt.load_xml(f, checkAddFrictionRatio=True, checkAddDepth=True)
                 self.cpts.append(cpt)
             elif f.lower().endswith("gef"):
-                cpt.load_gef(f)
-                self.cpts.append(cpt)
+                cpt.load_gef(f, checkAddFrictionRatio=True, checkAddDepth=True)
+                self.cpts.append(cpt)    
 
 class Boreverzameling():
     def __init__(self):
@@ -64,6 +66,7 @@ class Boreverzameling():
     
     def load_multi_bore(self, fileList):
         for f in fileList:
+            print(f)
             bore = Bore()
             if f.lower().endswith("xml"):
                 bore.load_xml(f)
@@ -71,6 +74,29 @@ class Boreverzameling():
             elif f.lower().endswith("gef"):
                 bore.load_gef(f)
                 self.bores.append(bore)
+
+    def load_sikb(self, locationFiles):
+        # sikb bestanden zijn zelf al verzamelingen
+        # het zijn oorspronkelijk xml, die met de gefxml_viewer omgezet worden in
+        #  een csv met locaties en een bijbehorende map met boringen in csv
+        for locationFile in locationFiles:
+            locations = pd.read_csv(locationFile, sep=';')
+
+            locations = locations[locations['boorbeschrijving']]
+
+            locations['boring'] = locations['boring'].astype(str)
+            # elke regel in het bestand met locaties is een boring
+            for row in locations.itertuples():
+                try:
+                    bore = Bore()
+                    testid = getattr(row, 'boring')
+                    # de boring staat in een mapje met dezelfde naam als het bestand met de locaties
+                    boreFile = f'{locationFile.replace(".csv", "")}/{testid}.csv'
+                    # lees de boring in
+                    bore.from_sikb_csv(testid, boreFile, locationFile)
+                    self.bores.append(bore)
+                except Exception as e:
+                    print(locationFile, row, e)
 
 class GeotechnischLengteProfiel():
     def __init__(self):
@@ -165,21 +191,23 @@ class GeotechnischLengteProfiel():
             for bore in self.bores:
                 boreX = bore.projectedLocation * self.line.length
                 for descriptionLocation, soillayers in bore.soillayers.items():
-                    uppers = list(soillayers["upper_NAP"])
-                    lowers = list(soillayers["lower_NAP"])
-                    components = list(soillayers["components"])
+                    if "upper_NAP" in soillayers.columns:
+                        uppers = list(soillayers["upper_NAP"])
+                        lowers = list(soillayers["lower_NAP"])
+                        components = list(soillayers["components"])
 
-                    for upper, lower, component in reversed(list(zip(uppers, lowers, components))):
-                        left = 0
-                        # TODO: kan dit beter. Gemaakt vanwege een geval met component = nan (lab boring van Anthony Moddermanstraat)
-                        for comp, nr in component.items():
-                            barPlot = plt.barh(lower, width=2*comp, left=left+boreX, height=upper-lower, color=colorsDict[nr], align="edge")
-                            left += 2*comp
-                    # labels in de figuur kunnen storend zijn, daarom een optie om ze uit te zetten
-                    # TODO: dit moet ergens anders ingesteld.
-                    includeLabels = True
-                    if includeLabels:
-                        plt.text(boreX, bore.groundlevel, bore.testid, rotation="vertical", fontsize='x-small')
+                        for upper, lower, component in reversed(list(zip(uppers, lowers, components))):
+                            left = 0
+                            # TODO: kan dit beter. Gemaakt vanwege een geval met component = nan (lab boring van Anthony Moddermanstraat)
+                            if type(component) is dict:
+                                for comp, nr in component.items():
+                                    barPlot = plt.barh(lower, width=2*comp, left=left+boreX, height=upper-lower, color=colorsDict[nr], align="edge")
+                                    left += 2*comp
+                        # labels in de figuur kunnen storend zijn, daarom een optie om ze uit te zetten
+                        # TODO: dit moet ergens anders ingesteld.
+                        includeLabels = True
+                        if includeLabels:
+                            plt.text(boreX, bore.groundlevel, bore.testid, rotation="vertical", fontsize='x-small')
         else:
             # maak een eenvoudige plot van een boring
             for bore in self.bores:
@@ -226,7 +254,8 @@ class GeotechnischLengteProfiel():
 
                 plt.fill_between(allX, allYBottom, allYTop, color=self.materials.loc[boundary]["kleur"])
 
-        plotTop = True # TODO: dit moet ergens anders als variabele worden doorgegeven
+        # optie om alleen de bovenste meters te plotten
+        plotTop = False # TODO: dit moet ergens anders als variabele worden doorgegeven
         if plotTop:
             ax1.set_ylim(-5, 2)
 
@@ -236,6 +265,9 @@ class GeotechnischLengteProfiel():
         # stel de assen in
         ax1.set_xlabel("afstand [m]")
         ax1.set_ylabel("niveau [m t.o.v. NAP]")
+
+        # beperk de plot tot lengte van de profiellijn
+        ax1.set_xlim(left=0) # TODO: dit werkt niet handig als je de coördinaten uit grondonderzoek haalt. right=self.line.length
 
         plt.suptitle(profilename)
         fig.text(0.05, 0.15, 'Ingenieursbureau Gemeente Amsterdam - Team WGM - Vakgroep Geotechniek', fontsize='x-small')
