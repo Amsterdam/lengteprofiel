@@ -27,7 +27,7 @@ Dan kun je zo de nieuwste versie krijgen:
 1. Ga naar de map waarin de bestanden zijn opgeslagen, in het voorbeeld heet deze _scripts/lengteprofiel_
 1. Klik in de map _scripts/lengteprofiel_ met de rechtermuisknop en kies voor _Git Bash here_ (windows 10) of _Open Git Bash_ (windows 11)
 1. Kopieer en plak (met rechtse muisknop of shift + Insert):
-* `git pull main https://github.com/Amsterdam/lengteprofiel.git`
+* `git pull origin main`
 1. Je kan het Git bash venster nu afsluiten met `exit`
 1. Je hebt de nieuwste versie
 
