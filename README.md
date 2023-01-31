@@ -19,6 +19,18 @@ Uitvoer in png, svg en als er lagen zijn gemaakt .geo-format dat gebruikt kan wo
 1. Je kan het Git bash venster nu afsluiten met `exit`
 1. Controleer of er in de map _lengteprofiel_ een map is met de naam _input_ en een map _output_
 
+## De applicatie updaten
+De gefxml_reader en de lengteprofiel applicatie zijn nog niet uitontwikkeld en er komen updates beschikbaar.
+Heb je de applicatie eerder al opgeslagen met de stappen onder _De applicatie opslaan_?
+Dan kun je zo de nieuwste versie krijgen:
+1. Update de gefxml_reader met de stappen die hier beschreven staan [gefxml_reader](https://github.com/Amsterdam/gefxml_viewer)
+1. Ga naar de map waarin de bestanden zijn opgeslagen, in het voorbeeld heet deze _scripts/lengteprofiel_
+1. Klik in de map _scripts/lengteprofiel_ met de rechtermuisknop en kies voor _Git Bash here_ (windows 10) of _Open Git Bash_ (windows 11)
+1. Kopieer en plak (met rechtse muisknop of shift + Insert):
+* `git pull main https://github.com/Amsterdam/lengteprofiel.git`
+1. Je kan het Git bash venster nu afsluiten met `exit`
+1. Je hebt de nieuwste versie
+
 ## Input bestanden klaar zetten
 1. Maak in GIS een geojson bestand met daarin 1 lijn (mag meer dan 2 punten hebben)
 1. Sla het geojson bestand op in de map _input_ als _profiel.geojson_
